@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>대회장 주변 안내도 | Assembly Hall Directory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1E2430;
+    --paper:#F6F4EF;
+    --paper-raise:#FFFFFF;
+    --line: rgba(30,36,48,0.10);
+
+    --food:#D96F35;      --food-soft:#FBE7D8;
+    --lodging:#2F8F87;   --lodging-soft:#DBF0EE;
+    --shop:#C9A227;      --shop-soft:#F7EFCB;
+    --emg:#C1443A;       --emg-soft:#F8DEDB;
+    --transit:#3E7C4A;   --transit-soft:#DEEFDF;
+    --misc:#6C63A6;      --misc-soft:#E7E4F5;
+
+    --home:#1E2430;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Manrope', -apple-system, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:60px;
+  }
+
+  a{color:inherit; text-decoration:none;}
+
+  /* ---------- HEADER ---------- */
+  header{
+    background:var(--ink);
+    color:var(--paper);
+    padding:28px 20px 22px;
+    position:relative;
+    overflow:hidden;
+  }
+  header::after{
+    content:"";
+    position:absolute; right:-40px; top:-40px;
+    width:160px; height:160px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,0.06), transparent 70%);
+  }
+  .kicker{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:11px; letter-spacing:0.16em; text-transform:uppercase;
+    opacity:0.55; margin-bottom:8px; font-weight:600;
+  }
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:26px; line-height:1.25; margin:0 0 4px;
+    font-weight:700;
+  }
+  h1 .en{
+    display:block; font-size:13px; font-weight:500; opacity:0.6; letter-spacing:0.01em; margin-top:4px;
+  }
+
+  /* Home pin card */
+  .home-card{
+    margin-top:18px;
+    background:rgba(255,255,255,0.07);
+    border:1px solid rgba(255,255,255,0.14);
+    border-radius:14px;
+    padding:14px 16px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .home-pin{
+    width:38px; height:38px; flex:0 0 38px;
+    border-radius:50%;
+    background:var(--paper);
+    color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px;
+  }
+  .home-text{flex:1; min-width:0;}
+  .home-text .name{font-weight:700; font-size:14.5px;}
+  .home-text .addr{font-size:12.5px; opacity:0.65; margin-top:2px;}
+  .home-go{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:11.5px; font-weight:600;
+    background:var(--paper); color:var(--ink);
+    padding:8px 12px; border-radius:20px;
+    white-space:nowrap;
+  }
+
+  /* ---------- FILTER TABS ---------- */
+  .tabs-wrap{
+    position:sticky; top:0; z-index:20;
+    background:var(--paper);
+    padding:12px 14px 10px;
+    border-bottom:1px solid var(--line);
+  }
+  .tabs{
+    display:flex; gap:8px; overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    padding-bottom:2px;
+  }
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{
+    flex:0 0 auto;
+    font-family:'Space Grotesk', sans-serif;
+    font-size:12.5px; font-weight:600;
+    padding:9px 14px;
+    border-radius:20px;
+    background:var(--paper-raise);
+    border:1px solid var(--line);
+    display:flex; align-items:center; gap:6px;
+    white-space:nowrap;
+    cursor:pointer;
+    transition:transform .15s ease;
+  }
+  .tab:active{transform:scale(0.96);}
+  .tab .dot{width:8px; height:8px; border-radius:50%;}
+  .tab[data-cat="food"] .dot{background:var(--food);}
+  .tab[data-cat="lodging"] .dot{background:var(--lodging);}
+  .tab[data-cat="shop"] .dot{background:var(--shop);}
+  .tab[data-cat="emg"] .dot{background:var(--emg);}
+  .tab[data-cat="transit"] .dot{background:var(--transit);}
+  .tab[data-cat="misc"] .dot{background:var(--misc);}
+
+  /* ---------- SECTIONS ---------- */
+  main{padding:18px 16px 10px;}
+  section{margin-bottom:30px; scroll-margin-top:64px;}
+
+  .sec-head{
+    display:flex; align-items:baseline; gap:10px;
+    margin-bottom:12px; padding-bottom:8px;
+    border-bottom:2px solid var(--ink);
+  }
+  .sec-head .icon{
+    width:26px; height:26px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; color:white; flex:0 0 26px;
+  }
+  section[data-cat="food"] .icon{background:var(--food);}
+  section[data-cat="lodging"] .icon{background:var(--lodging);}
+  section[data-cat="shop"] .icon{background:var(--shop);}
+  section[data-cat="emg"] .icon{background:var(--emg);}
+  section[data-cat="transit"] .icon{background:var(--transit);}
+  section[data-cat="misc"] .icon{background:var(--misc);}
+
+  .sec-head h2{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:17px; margin:0; font-weight:700;
+  }
+  .sec-head .sub{
+    font-size:12px; opacity:0.55; margin-left:auto; font-weight:500;
+  }
+
+  .subgroup-label{
+    font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
+    font-weight:700; opacity:0.45; margin:16px 2px 8px;
+  }
+  .subgroup-label:first-of-type{margin-top:4px;}
+
+  /* ---------- CARDS ---------- */
+  .card{
+    background:var(--paper-raise);
+    border-radius:14px;
+    border:1px solid var(--line);
+    padding:13px 14px;
+    margin-bottom:9px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .num{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:11.5px; font-weight:700;
+    width:24px; height:24px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    flex:0 0 24px;
+  }
+  section[data-cat="food"] .num{background:var(--food-soft); color:var(--food);}
+  section[data-cat="lodging"] .num{background:var(--lodging-soft); color:var(--lodging);}
+  section[data-cat="shop"] .num{background:var(--shop-soft); color:var(--shop);}
+  section[data-cat="emg"] .num{background:var(--emg-soft); color:var(--emg);}
+  section[data-cat="transit"] .num{background:var(--transit-soft); color:var(--transit);}
+  section[data-cat="misc"] .num{background:var(--misc-soft); color:var(--misc);}
+
+  .info{flex:1; min-width:0;}
+  .info .name{font-size:14.5px; font-weight:700; margin-bottom:3px;}
+  .info .addr-link{
+    font-size:12.5px; opacity:0.62; display:flex; align-items:center; gap:4px;
+  }
+  .info .addr-link:active{opacity:0.9;}
+  .info .addr-link svg{flex:0 0 auto;}
+
+  .actions{display:flex; gap:6px; flex:0 0 auto;}
+  .act-btn{
+    width:36px; height:36px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--paper);
+    border:1px solid var(--line);
+    flex:0 0 36px;
+  }
+  .act-btn:active{transform:scale(0.92);}
+  .act-btn.map svg{color:var(--ink);}
+  .act-btn.call{background:#EAF6EC; border-color:#cfeed4;}
+  .act-btn.call svg{color:#2E7D32;}
+
+  footer{
+    text-align:center; padding:22px 20px 8px;
+    font-size:11.5px; opacity:0.4;
+  }
+
+  @media (min-width:640px){
+    main{max-width:640px; margin:0 auto; padding:22px 20px;}
+    header, .tabs-wrap{max-width:640px; margin:0 auto;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">Directory of Points of Interest</div>
+  <h1>대회장 주변 안내도
+    <span class="en">Assembly Hall of Jehovah's Witnesses — Area Guide</span>
+  </h1>
+
+  <div class="home-card">
+    <div class="home-pin">🏛️</div>
+    <div class="home-text">
+      <div class="name">Assembly Hall of Jehovah's Witnesses</div>
+      <div class="addr">800 N Schmidt Rd, Romeoville, IL 60446</div>
+    </div>
+    <a class="home-go" href="https://www.google.com/maps/dir/?api=1&destination=800%20N%20Schmidt%20Rd%2C%20Romeoville%2C%20IL%2060446" target="_blank" rel="noopener">길찾기 →</a>
+  </div>
+</header>
+
+<div class="tabs-wrap">
+  <div class="tabs" id="tabs">
+    <div class="tab" data-cat="food" onclick="jump('food')"><span class="dot"></span>식당·커피</div>
+    <div class="tab" data-cat="lodging" onclick="jump('lodging')"><span class="dot"></span>호텔</div>
+    <div class="tab" data-cat="shop" onclick="jump('shop')"><span class="dot"></span>쇼핑</div>
+    <div class="tab" data-cat="emg" onclick="jump('emg')"><span class="dot"></span>병원·약국</div>
+    <div class="tab" data-cat="transit" onclick="jump('transit')"><span class="dot"></span>렌트·택시</div>
+    <div class="tab" data-cat="misc" onclick="jump('misc')"><span class="dot"></span>ATM</div>
+  </div>
+</div>
+
+<main>
+
+  <!-- FOOD -->
+  <section id="food" data-cat="food">
+    <div class="sec-head">
+      <div class="icon">🍜</div>
+      <h2>식당 &amp; 커피숍</h2>
+      <div class="sub">Food</div>
+    </div>
+
+    <div class="subgroup-label">Restaurants · 식당</div>
+    <div id="food-list"></div>
+
+    <div class="subgroup-label">Coffee Shops · 커피숍</div>
+    <div id="coffee-list"></div>
+  </section>
+
+  <!-- LODGING -->
+  <section id="lodging" data-cat="lodging">
+    <div class="sec-head">
+      <div class="icon">🛏️</div>
+      <h2>호텔</h2>
+      <div class="sub">Lodging</div>
+    </div>
+    <div id="lodging-list"></div>
+  </section>
+
+  <!-- SHOPPING -->
+  <section id="shop" data-cat="shop">
+    <div class="sec-head">
+      <div class="icon">🛍️</div>
+      <h2>쇼핑</h2>
+      <div class="sub">Shopping</div>
+    </div>
+    <div class="subgroup-label">Korean Groceries · 한국 식품점</div>
+    <div id="grocery-list"></div>
+    <div class="subgroup-label">Shopping Centers · 쇼핑몰</div>
+    <div id="mall-list"></div>
+  </section>
+
+  <!-- EMERGENCY -->
+  <section id="emg" data-cat="emg">
+    <div class="sec-head">
+      <div class="icon">🏥</div>
+      <h2>병원 &amp; 약국</h2>
+      <div class="sub">Emergency</div>
+    </div>
+    <div class="subgroup-label">Hospitals · 병원</div>
+    <div id="hosp-list"></div>
+    <div class="subgroup-label">Pharmacies · 약국</div>
+    <div id="pharm-list"></div>
+  </section>
+
+  <!-- TRANSPORTATION -->
+  <section id="transit" data-cat="transit">
+    <div class="sec-head">
+      <div class="icon">🚕</div>
+      <h2>렌트카 &amp; 택시</h2>
+      <div class="sub">Transportation</div>
+    </div>
+    <div class="subgroup-label">Rental Car · 자동차 렌트</div>
+    <div id="rental-list"></div>
+    <div class="subgroup-label">Taxi · 택시</div>
+    <div id="taxi-list"></div>
+  </section>
+
+  <!-- MISC -->
+  <section id="misc" data-cat="misc">
+    <div class="sec-head">
+      <div class="icon">💳</div>
+      <h2>ATM</h2>
+      <div class="sub">Misc</div>
+    </div>
+    <div id="atm-list"></div>
+  </section>
+
+</main>
+
+<footer>주소를 탭하면 구글 지도로, 전화번호를 탭하면 바로 전화가 연결됩니다.</footer>
+
+<script>
+const MAP_ICON = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>`;
+const PIN_SMALL = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`;
+const PHONE_ICON = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`;
+
+function mapURL(addr){
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addr)}`;
+}
+
+function makeCard(num, name, addr, phone){
+  const call = phone
+    ? `<a class="act-btn call" href="tel:${phone.replace(/[^0-9+]/g,'')}" aria-label="call">${PHONE_ICON}</a>`
+    : '';
+  return `
+  <div class="card">
+    <div class="num">${num}</div>
+    <div class="info">
+      <div class="name">${name}</div>
+      <a class="addr-link" href="${mapURL(addr)}" target="_blank" rel="noopener">${PIN_SMALL} ${addr}</a>
+    </div>
+    <div class="actions">
+      <a class="act-btn map" href="${mapURL(addr)}" target="_blank" rel="noopener" aria-label="map">${MAP_ICON}</a>
+      ${call}
+    </div>
+  </div>`;
+}
+
+const data = {
+  'food-list': [
+    ['1','SGD Dubu So Gong Dong Tofu','1283 E Ogden Ave #105, Naperville, IL 60563','(331) 226-2903'],
+    ['2','Gumii','3124 Illinois Rte 59 #140, Naperville, IL 60564','(331) 229-8785'],
+    ['3','Kogii Kogii Express','1763 Freedom Dr #101, Naperville, IL 60563','(630) 453-5506'],
+    ['4','Seocho Garden 1600','Maple Ave C, Lisle, IL 60532','(630) 515-0033'],
+    ['5','H-Mart Naperville Food Court','1295 E Ogden Ave, Naperville, IL 60563','(630) 778-9800'],
+    ['6','SGD Dubu So Gong Dong','18W066 W 22nd St, Oakbrook Terrace, IL 60181','(630) 568-3678'],
+    ['7','Seoul Bites','533 E Roosevelt Rd, Lombard, IL 60148','(630) 596-2715'],
+    ['8','Zuka Sushi-Hibachi & Chinese','105 Remington Blvd, Bolingbrook, IL 60440','(630) 755-4155'],
+  ],
+  'coffee-list': [
+    ['9','Starbucks Coffee','470 N Independence Blvd, Romeoville, IL 60446',''],
+    ['10','Qargo Coffee','225 N Weber Rd, Bolingbrook, IL 60490',''],
+    ['11','Tea Time Any Time','247 S Bolingbrook Dr, Bolingbrook, IL 60440',''],
+    ['12','Dunkin\' Donuts','649 N Independence Blvd, Romeoville, IL 60446',''],
+  ],
+  'lodging-list': [
+    ['1','Best Western Bolingbrook','520 S Bolingbrook Dr, Bolingbrook, IL 60440','(630) 972-9797'],
+    ['2','Country Inn & Suites','225 W South Frontage Rd, Bolingbrook, IL 60440','(630) 296-0530'],
+    ['3','Holiday Inn & Suites Bolingbrook','205 Remington Blvd, Bolingbrook, IL 60440','(630) 679-1600'],
+    ['4','Residence Inn Bolingbrook','180 Remington Blvd, Bolingbrook, IL 60440','(630) 332-5200'],
+  ],
+  'grocery-list': [
+    ['1','H Mart Naperville','1295 E Ogden Ave, Naperville, IL 60563','(630) 778-9800'],
+    ['2','Joong Boo Market','3333 N Kimball Ave, Chicago, IL 60618','(773) 478-5566'],
+    ['3','Seoul Supermarket','1204 W Dundee Rd, Buffalo Grove, IL 60089','(847) 870-8830'],
+  ],
+  'mall-list': [
+    ['4','Promenade Bolingbrook','631 E Boughton Rd, Bolingbrook, IL 60440',''],
+    ['5','Fox Valley Mall','195 Fox Valley Center Dr, Aurora, IL 60504',''],
+  ],
+  'hosp-list': [
+    ['1','UChicago Medicine AdventHealth Bolingbrook','500 Remington Blvd, Bolingbrook, IL 60440',''],
+    ['2','Romeoville Urgent Care','637 N Independence Blvd, Romeoville, IL 60446',''],
+  ],
+  'pharm-list': [
+    ['3','Walgreens','347 N Independence Blvd, Romeoville, IL 60446',''],
+    ['4','Walgreens','680 S Weber Rd, Romeoville, IL 60446',''],
+  ],
+  'rental-list': [
+    ['1','Enterprise','417 N Bolingbrook Dr, Bolingbrook, IL 60440','(888) 445-5664'],
+    ['2','Avis','1 Hanger Rd, Romeoville, IL 60446','(734) 229-3100'],
+  ],
+  'taxi-list': [
+    ['3','Chicago No1 TAXI (한인택시)','1029 Midway Rd, Northbrook, IL 60062','847-514-6710'],
+    ['4','Newtown Limo Service','2540 W Balmoral Ave, Chicago, IL 60625','847-630-4468'],
+  ],
+  'atm-list': [
+    ['1','ATM (Weber Rd)','399 S Weber Rd, Romeoville, IL 60446',''],
+    ['2','ATM (Phelps Ave)','50 Phelps Ave, Romeoville, IL 60446',''],
+    ['3','ATM / 7-Eleven (N Independence)','701 N Independence Blvd, Romeoville, IL 60446',''],
+  ],
+};
+
+Object.entries(data).forEach(([id, items])=>{
+  const el = document.getElementById(id);
+  el.innerHTML = items.map(([n,name,addr,phone])=>makeCard(n,name,addr,phone)).join('');
+});
+
+function jump(id){
+  document.getElementById(id).scrollIntoView({behavior:'smooth', block:'start'});
+}
+</script>
+
+</body>
+</html>
